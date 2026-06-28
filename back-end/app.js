@@ -16,6 +16,7 @@ app.use("/api/", allInfoRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 
+
 app.listen(process.env.PORT, () => {
   console.log(`server running on port ${process.env.PORT}`);
 });

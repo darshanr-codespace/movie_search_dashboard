@@ -10,14 +10,14 @@ import {
   Chip,
   IconButton,
 } from "@mui/material";
-import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import BookmarkAddIcon from "@mui/icons-material/BookmarkAdd";
 import LocalMoviesIcon from "@mui/icons-material/LocalMovies";
 import TvIcon from "@mui/icons-material/Tv";
 import StarIcon from "@mui/icons-material/Star";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function MediaCard({
   title,
@@ -54,29 +54,38 @@ function MediaCard({
           flexGrow: 1,
         }}
       >
-        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}>
+        <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 5 }}>
           <IconButton
             size="small"
             onClick={async (e) => {
               e.stopPropagation();
-              const token = window.localStorage.getItem('authToken');
-              if (!token) return (window.location.href = '/login');
-              const payload = { id, title: title ?? name, poster_path, genres, release_year: release_year ?? first_air_year };
+              const token = window.localStorage.getItem("authToken");
+              if (!token) return (window.location.href = "/login");
+              const payload = {
+                id,
+                title: title ?? name,
+                poster_path,
+                genres,
+                release_year: release_year ?? first_air_year,
+              };
               try {
-                const res = await fetch('/api/user/collection', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                const res = await fetch("/api/user/collection", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
                   body: JSON.stringify(payload),
                 });
-                if (!res.ok) throw new Error('Failed to save');
+                if (!res.ok) throw new Error("Failed to save");
                 // simple feedback
-                console.log('Saved to collection');
+                console.log("Saved to collection");
               } catch (err) {
                 console.error(err);
-                alert('Save failed');
+                alert("Save failed");
               }
             }}
-            sx={{ bgcolor: 'background.paper' }}
+            sx={{ bgcolor: "background.paper" }}
           >
             <BookmarkAddIcon fontSize="small" />
           </IconButton>
@@ -87,7 +96,14 @@ function MediaCard({
           alt={title ?? name}
           sx={{ width: "100%", height: 280, objectFit: "cover" }}
         />
-        <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <CardContent
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
           <Typography variant="h4" noWrap>
             {title ?? name}
           </Typography>
@@ -116,7 +132,8 @@ function MediaCard({
   );
 }
 
-function Home() {
+function Home({ handleDetails }) {
+  const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = React.useState(0);
   const [movies, setMovies] = useState([]);
   const [tvShows, setTvShows] = useState([]);
@@ -313,15 +330,32 @@ function Home() {
             <Typography variant="h3">Trending Movies</Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 2 }}>
-              <Grid container spacing={2}>
-                {movies.map((movie, i) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={i} sx={{ display: "flex" }}>
-                    <Link to="/dashboard/details" style={{ width: "100%" }}>
-                      <MediaCard {...movie} />
-                    </Link>
-                  </Grid>
-                ))}
-              </Grid>
+            <Grid container spacing={2}>
+              {movies.map((movie, i) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  key={movie.id}
+                  sx={{ display: "flex" }}
+                  onClick={async () => {
+                    const route = `/api/search/${movie.id}`;
+                    const res = await fetch(route);
+
+                    if (res.ok) {
+                      handleDetails(await res.json());
+                      navigate("/dashboard/details/");
+                    } else {
+                      throw new Error(`HTTP ${res.status}`);
+                    }
+                  }}
+                >
+                  <MediaCard {...movie} />
+                </Grid>
+              ))}
+            </Grid>
           </Box>
         </Box>
 
@@ -340,10 +374,27 @@ function Home() {
           </Box>
           <Grid container spacing={2}>
             {tvShows.map((show, i) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={i} sx={{ display: "flex" }}>
-                <Link to="/dashboard/details">
-                  <MediaCard {...show} />
-                </Link>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={show.id}
+                sx={{ display: "flex" }}
+                onClick={async () => {
+                  const route = `/api/search/${show.id}`;
+                  const res = await fetch(route);
+
+                  if (res.ok) {
+                    handleDetails(await res.json());
+                    navigate("/dashboard/details/");
+                  } else {
+                    throw new Error(`HTTP ${res.status}`);
+                  }
+                }}
+              >
+                <MediaCard {...show} />
               </Grid>
             ))}
           </Grid>

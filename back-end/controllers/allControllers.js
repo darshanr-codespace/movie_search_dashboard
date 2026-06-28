@@ -9,6 +9,7 @@ const getAllData = async (req, res) => {
       {
         $project: {
           _id: 0,
+          id: 1,
           title: 1,
           poster_path: 1,
           genres: 1,
@@ -25,11 +26,12 @@ const getAllData = async (req, res) => {
       {
         $project: {
           _id: 0,
-          name:1,
-          poster_path:1,
-          vote_average:1,
-          genres:1,
-          first_air_year:1
+          id: 1,
+          name: 1,
+          poster_path: 1,
+          vote_average: 1,
+          genres: 1,
+          first_air_year: 1,
         },
       },
     ])
@@ -65,4 +67,14 @@ const getAllData = async (req, res) => {
   return res.json([...movies, ...tvShows]);
 };
 
-export { getAllData };
+const getDetails = async (req, res) => {
+  const id = Number(req.params.id);
+  console.log(id);
+  const moviesDB = client.db("moviesDB");
+  const data =
+    (await moviesDB.collection("movies").findOne({ id: id })) ??
+    (await moviesDB.collection("tvShows").findOne({ id: id }));
+  res.json({ ...data});
+};
+
+export { getAllData, getDetails };

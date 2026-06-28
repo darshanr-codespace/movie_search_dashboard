@@ -10,6 +10,7 @@ const getTrendingMovies = async (req, res) => {
         {
           $project: {
             _id: 0,
+            id:1,
             title: 1,
             poster_path: 1,
             genres: 1,

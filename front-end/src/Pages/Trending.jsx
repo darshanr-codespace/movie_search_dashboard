@@ -11,10 +11,10 @@ import {
   Stack,
   IconButton,
 } from "@mui/material";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import StarIcon from "@mui/icons-material/Star";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
-import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import BookmarkAddIcon from "@mui/icons-material/BookmarkAdd";
 
 const filters = ["All", "Movies", "TV Shows"];
 const sortOptions = ["Trending", "IMDB Rating", "Newest", "Oldest"];
@@ -73,28 +73,37 @@ function MediaCard({
           flexGrow: 1,
         }}
       >
-        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}>
+        <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 5 }}>
           <IconButton
             size="small"
             onClick={async (e) => {
               e.stopPropagation();
-              const token = window.localStorage.getItem('authToken');
-              if (!token) return (window.location.href = '/login');
-              const payload = { id, title: cardTitle, poster_path, genres: cardGenre, release_year: cardYear };
+              const token = window.localStorage.getItem("authToken");
+              if (!token) return (window.location.href = "/login");
+              const payload = {
+                id,
+                title: cardTitle,
+                poster_path,
+                genres: cardGenre,
+                release_year: cardYear,
+              };
               try {
-                const res = await fetch('/api/user/collection', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                const res = await fetch("/api/user/collection", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
                   body: JSON.stringify(payload),
                 });
-                if (!res.ok) throw new Error('Failed to save');
-                console.log('Saved to collection');
+                if (!res.ok) throw new Error("Failed to save");
+                console.log("Saved to collection");
               } catch (err) {
                 console.error(err);
-                alert('Save failed');
+                alert("Save failed");
               }
             }}
-            sx={{ bgcolor: 'background.paper' }}
+            sx={{ bgcolor: "background.paper" }}
           >
             <BookmarkAddIcon fontSize="small" />
           </IconButton>
@@ -139,7 +148,8 @@ function MediaCard({
   );
 }
 
-function Trending() {
+function Trending({ handleDetails }) {
+  const navigate = useNavigate();
   useEffect(() => {
     document.title = "Movie Stats | Trending";
   }, []);
@@ -170,7 +180,6 @@ function Trending() {
         setAllData(data);
       } catch (err) {
         console.log(err);
-        // fallback to static list when backend fails
         setAllData([]);
       }
     }
@@ -184,8 +193,8 @@ function Trending() {
         activeFilter === "Movies"
           ? "movies"
           : activeFilter === "TV Shows"
-          ? "shows"
-          : null,
+            ? "shows"
+            : null,
       genre: activeGenre === "All Genres" ? null : activeGenre.toLowerCase(),
     });
   }, [activeFilter, activeGenre]);
@@ -220,10 +229,13 @@ function Trending() {
               fontWeight: 700,
               cursor: "pointer",
               bgcolor:
-                activeFilter === filter ? "primary.main" : "rgba(109,109,110,0.24)",
+                activeFilter === filter
+                  ? "primary.main"
+                  : "rgba(109,109,110,0.24)",
               color: activeFilter === filter ? "#fff" : "text.primary",
               border: "1px solid",
-              borderColor: activeFilter === filter ? "primary.main" : "transparent",
+              borderColor:
+                activeFilter === filter ? "primary.main" : "transparent",
             }}
           />
         ))}
@@ -242,7 +254,8 @@ function Trending() {
               fontWeight: 600,
               cursor: "pointer",
               fontSize: "0.75rem",
-              bgcolor: activeGenre === genre ? "rgba(229,9,20,0.18)" : "transparent",
+              bgcolor:
+                activeGenre === genre ? "rgba(229,9,20,0.18)" : "transparent",
               color: activeGenre === genre ? "primary.main" : "text.secondary",
               border: "1px solid",
               borderColor: activeGenre === genre ? "primary.main" : "divider",
@@ -251,7 +264,11 @@ function Trending() {
         ))}
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 3, alignItems: "center", flexWrap: "wrap" }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ mb: 3, alignItems: "center", flexWrap: "wrap" }}
+      >
         <Typography variant="body2" sx={{ mr: 1 }}>
           Sort by:
         </Typography>
@@ -264,7 +281,8 @@ function Trending() {
               fontWeight: 600,
               cursor: "pointer",
               fontSize: "0.72rem",
-              bgcolor: activeSort === option ? "background.paper" : "transparent",
+              bgcolor:
+                activeSort === option ? "background.paper" : "transparent",
               color: activeSort === option ? "text.primary" : "text.secondary",
               border: "1px solid",
               borderColor: activeSort === option ? "divider" : "transparent",
@@ -279,10 +297,27 @@ function Trending() {
 
       <Grid container spacing={2}>
         {visible.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id} sx={{ display: "flex" }}>
-            <Link to="/dashboard/details" style={{ width: "100%" }}>
-              <MediaCard {...item} />
-            </Link>
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            key={item.id}
+            sx={{ display: "flex" }}
+            onClick={async () => {
+              const route = `/api/search/${item.id}`;
+              const res = await fetch(route);
+
+              if (res.ok) {
+                handleDetails(await res.json());
+                navigate("/dashboard/details/");
+              } else {
+                throw new Error(`HTTP ${res.status}`);
+              }
+            }}
+          >
+            <MediaCard {...item} />
           </Grid>
         ))}
       </Grid>

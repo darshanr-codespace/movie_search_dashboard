@@ -11,6 +11,7 @@ const getTrendingShows = async (req, res) => {
         {
           $project: {
             _id: 0,
+            id:1,
             name: 1,
             poster_path: 1,
             vote_average: 1,
